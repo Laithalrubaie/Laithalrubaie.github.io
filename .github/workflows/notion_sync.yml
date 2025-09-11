@@ -6,6 +6,10 @@ on:
     - cron: '0 0 * * *'
 # Manually trigger the workflow from the Actions tab
   workflow_dispatch:
+  
+  permissions:
+    contents: write   # ✅ allow pushing commits
+
 jobs: 
   sync-notion-notes:
     runs-on: ubuntu-latest

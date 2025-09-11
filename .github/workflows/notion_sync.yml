@@ -1,31 +1,19 @@
-This is a GitHub Actions workflow to sync Notion notes with the website.
+# This is a GitHub Actions workflow to sync Notion notes with the website.
+
 name: Notion to Website Sync
+
 on:
-Trigger the workflow on a schedule (e.g., every day at midnight)
-schedule: - cron: '0 0 * * *'
-Manually trigger the workflow from the Actions tab
-workflow_dispatch:
-jobs: sync-notion-notes: runs-on: ubuntu-latest steps: - name: Checkout repository uses: actions/checkout@v2
-  - name: Set up Python
-    uses: actions/setup-python@v2
-    with:
-      python-version: '3.x'
+  schedule:
+    - cron: '0 0 * * *' # every day at midnight
+  workflow_dispatch: # allow manual trigger
 
-  - name: Install dependencies
-    run: |
-      python -m pip install --upgrade pip
-      pip install requests notion-client
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-  - name: Run Notion sync script
-    env:
-      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-      NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
-    run: python generate_notes.py
-
-  - name: Commit and push changes
-    run: |
-      git config --global user.name "github-actions"
-      git config --global user.email "github-actions@github.com"
-      git add personal_newsletter.html
-      git commit -m "Automated: Sync notes from Notion" || echo "No changes to commit"
-      git push
+      - name: Sync Notion notes
+        run: |
+          echo "Here you would add your Notion sync script/command"

@@ -1,5 +1,5 @@
 # This Python script fetches notes from a Notion database and converts them to HTML.
-# هذا السكربت يجيب المذكرات من Notion ويحولها لـ HTML.
+# هذا السكربت يجيب المذكرات من Notion ويحوّلها إلى HTML (كل صفحة ملف منفصل + Index).
 
 import os
 import requests
@@ -52,7 +52,7 @@ def parse_notion_block_to_html(block):
                 plain_text = f"<s>{plain_text}</s>"
             if annotations['code']:
                 plain_text = f"<code>{plain_text}</code>"
-            
+
             html_content += plain_text
 
     # Convert block types to HTML tags
@@ -62,6 +62,14 @@ def parse_notion_block_to_html(block):
         return f"<h1 class='text-4xl font-bold text-gray-900 mt-8 mb-4'>{html_content}</h1>"
     elif block_type == 'heading_2':
         return f"<h2 class='text-3xl font-bold text-gray-900 mt-6 mb-3'>{html_content}</h2>"
+    elif block_type == 'quote':
+        return f"<blockquote class='border-l-4 border-gray-300 pl-4 italic text-gray-700 my-4'>{html_content}</blockquote>"
+    elif block_type == 'callout':
+        icon = block['callout'].get('icon', {}).get('emoji', '💡')
+        return f"<div class='bg-green-100 p-4 rounded-lg my-4 flex items-center'><span class='mr-2'>{icon}</span> {html_content}</div>"
+    elif block_type == 'code':
+        language = block['code'].get('language', '')
+        return f"<pre class='bg-gray-900 text-white p-4 rounded-lg overflow-x-auto my-4'><code class='{language}'>{html_content}</code></pre>"
     elif block_type == 'bulleted_list_item':
         return f"<li class='text-gray-600'>{html_content}</li>"
     elif block_type == 'numbered_list_item':
@@ -76,53 +84,57 @@ def parse_notion_block_to_html(block):
         return f"<p class='text-gray-600 mb-4'>[Unsupported block type: {block_type}]</p>"
 
 def generate_notes_html():
-    """Generates the full HTML content for the notes section."""
+    """Generates HTML files for each Notion page and an index page."""
     pages = get_notion_pages()
-    notes_html_content = ""
+    index_links = ""
 
     for page in pages:
-        # Extract title and date
+        # Extract title and slug
         title = page['properties']['Name']['title'][0]['plain_text']
-        last_edited = page['last_edited_time']
-        formatted_date = last_edited.split('T')[0] # Get only the date part
+        slug = re.sub(r'[^a-zA-Z0-9]+', '-', title.lower())  # "My Note" -> "my-note"
+        filename = f"{slug}.html"
 
-        # Fetch page content
-        page_content = get_page_content(page['id'])
-        content_html = ""
-        for block in page_content:
-            content_html += parse_notion_block_to_html(block)
+        last_edited = page['last_edited_time'].split('T')[0]
 
-        # Create the note card
-        note_card = f"""
-        <div class="bg-gray-50 rounded-lg p-6 shadow-md hover:shadow-xl transition-shadow duration-300">
-            <h3 class="text-xl font-bold text-gray-900 mb-2">{title}</h3>
-            <p class="text-sm text-gray-500 mb-4">نشرت في: {formatted_date}</p>
+        # Get content
+        blocks = get_page_content(page['id'])
+        content_html = "".join([parse_notion_block_to_html(b) for b in blocks])
+
+        # Build page HTML
+        page_html = f"""
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <title>{title}</title>
+            <link rel="stylesheet" href="style.css">
+          </head>
+          <body class="prose lg:prose-xl mx-auto p-8">
+            <h1>{title}</h1>
+            <p class="text-sm text-gray-500">نشرت في: {last_edited}</p>
             {content_html}
-        </div>
+          </body>
+        </html>
         """
-        notes_html_content += note_card
 
-    return notes_html_content
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(page_html)
 
-# Main function to update the HTML file
-if __name__ == "__main__":
-    html_content = generate_notes_html()
-    
-    # Read the main HTML file
-    with open("personal_newsletter.html", "r", encoding="utf-8") as file:
-        main_html = file.read()
+        # Add link to index
+        index_links += f"<li><a href='{filename}' class='text-blue-600 hover:underline'>{title}</a> ({last_edited})</li>\n"
 
-    # Find the notes section and replace its content
-    start_tag = '<!-- Notes Container Section -->'
-    end_tag = '<!-- End Notes Container Section -->'
-    
-    # Use regex to find and replace the content between the tags
+    # Update index (personal_newsletter.html)
+    with open("personal_newsletter.html", "r", encoding="utf-8") as f:
+        index_html = f.read()
+
     new_html = re.sub(
         r'<!-- Notes Container Section -->[\s\S]*<!-- End Notes Container Section -->',
-        f'<!-- Notes Container Section -->\n{html_content}\n        <!-- End Notes Container Section -->',
-        main_html
+        f'<!-- Notes Container Section -->\n<ul>{index_links}</ul>\n<!-- End Notes Container Section -->',
+        index_html
     )
 
-    # Write the updated HTML back to the file
-    with open("personal_newsletter.html", "w", encoding="utf-8") as file:
-        file.write(new_html)
+    with open("personal_newsletter.html", "w", encoding="utf-8") as f:
+        f.write(new_html)
+
+# Run script
+if __name__ == "__main__":
+    generate_notes_html()

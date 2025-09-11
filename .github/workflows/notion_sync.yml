@@ -27,7 +27,7 @@ jobs:
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
-          run: python generate_notes.py
+        run: python generate_notes.py
 
       - name: Commit and push changes
         run: |

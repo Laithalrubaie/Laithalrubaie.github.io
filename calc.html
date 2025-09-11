@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حاسبة أرباح تيك توك</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f2f5;
+            direction: rtl;
+            text-align: right;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .input-group label {
+            font-weight: 600;
+        }
+        .input-group input {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+        .output-box {
+            background-color: #e2f0ff;
+            border: 2px solid #4a90e2;
+            border-radius: 12px;
+        }
+        .output-box p {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        .profit-status {
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+        .profit {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .unprofitable {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .fixed-note {
+            background-color: #ffeccf;
+            border-left: 4px solid #f6ad55;
+            padding: 12px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-8">
+    <div class="container mx-auto bg-white rounded-xl shadow-lg p-6 sm:p-10 my-8">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-6">حاسبة الأرباح </h1>
+        <p class="text-center text-gray-600 mb-8">حط معلوماتك حتى تعرف حملتك الإعلانية مربحة لو لا. 🚀</p>
+
+        <!-- Inputs Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Wholesale Price -->
+            <div class="input-group flex flex-col">
+                <label for="wholesalePrice" class="mb-2">سعر الجملة (بالعراقي) 🛍️</label>
+                <input type="number" id="wholesalePrice" placeholder="سعر الشراء من المورد" class="bg-gray-50 focus:bg-white">
+                <p class="text-sm text-gray-500 mt-1">شگد تكلفك البضاعة من تشتريها بالجملة.</p>
+            </div>
+            <!-- Delivery Cost -->
+            <div class="input-group flex flex-col">
+                <label for="deliveryCost" class="mb-2">سعر التوصيل (بالعراقي) 🚚</label>
+                <input type="number" id="deliveryCost" placeholder="كلفة التوصيل للطلب الواحد" class="bg-gray-50 focus:bg-white">
+                <p class="text-sm text-gray-500 mt-1">كلفة توصيل الطلب الواحد.</p>
+            </div>
+            <!-- Delivery Rate -->
+            <div class="input-group flex flex-col">
+                <label for="deliveryRate" class="mb-2">نسبة الاستلام (%) ✅</label>
+                <input type="number" id="deliveryRate" placeholder="نسبة الطلبات اللي تستلمها" class="bg-gray-50 focus:bg-white">
+                <p class="text-sm text-gray-500 mt-1">النسبة المتوقعة من الزباين اللي يستلمون طلباتهم فعلاً.</p>
+            </div>
+            <!-- Final Selling Price -->
+            <div class="input-group flex flex-col">
+                <label for="sellingPriceInput" class="mb-2">سعر البيع للزبون (بالعراقي) 💰</label>
+                <input type="number" id="sellingPriceInput" placeholder="السعر اللي تبيعه للزبون" class="bg-gray-50 focus:bg-white">
+                <p class="text-sm text-gray-500 mt-1">السعر اللي تطلبه من الزبون.</p>
+            </div>
+            <!-- Daily Budget -->
+            <div class="input-group flex flex-col">
+                <label for="dailyBudget" class="mb-2">الميزانية اليومية ($) 🗓️</label>
+                <input type="number" id="dailyBudget" placeholder="المبلغ المخصص يومياً" class="bg-gray-50 focus:bg-white">
+                <p class="text-sm text-gray-500 mt-1">الفلوس اللي تصرفها يومياً على الإعلانات.</p>
+            </div>
+            <!-- Maximum CPA (Input) -->
+            <div class="input-group flex flex-col">
+                <label for="maximumCPAInput" class="mb-2">كلفة الطلب اللي صارت ($) 🎯</label>
+                <input type="number" id="maximumCPAInput" placeholder="الكلفة الفعلية للطلب" class="bg-gray-50 focus:bg-white">
+                <p class="text-sm text-gray-500 mt-1">أعلى كلفة أنت تقبلها حتى تحصل على طلب واحد.</p>
+            </div>
+        </div>
+
+        <hr class="my-8">
+
+        <!-- Outputs Section -->
+        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">النتائج 📊</h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <!-- Gross Profit -->
+            <div class="output-box p-4 flex flex-col">
+                <p class="text-gray-700">صافي الربح للطلب (بالعراقي) 🤑</p>
+                <span id="grossProfit" class="text-xl font-bold text-gray-900 mt-2">0 IQD</span>
+            </div>
+            <!-- Adjusted Profit -->
+            <div class="output-box p-4 flex flex-col">
+                <p class="text-gray-700">الربح بعد نسبة الاستلام (بالعراقي) 📈</p>
+                <span id="adjustedProfit" class="text-xl font-bold text-gray-900 mt-2">0 IQD</span>
+            </div>
+            <!-- Maximum CPA -->
+            <div class="output-box p-4 flex flex-col col-span-1 sm:col-span-2">
+                <p class="text-gray-700">أعلى كلفة للطلب المسموح بيها ($) 🎯</p>
+                <span id="maximumCPA" class="text-xl font-bold text-gray-900 mt-2">0 USD</span>
+                <div id="profitStatus" class="profit-status text-center mt-4 hidden"></div>
+            </div>
+            <!-- Required Orders per Day -->
+            <div class="output-box p-4 flex flex-col col-span-1 sm:col-span-2">
+                <p class="text-gray-700">الطلبات المطلوبة يومياً للربح 📦</p>
+                <span id="requiredOrders" class="text-xl font-bold text-gray-900 mt-2">0 طلب</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fixedExchangeRate = 1500; // سعر الصرف ثابت 1500
+        const inputs = [
+            'wholesalePrice', 'deliveryCost', 'deliveryRate',
+            'sellingPriceInput', 'dailyBudget', 'maximumCPAInput'
+        ];
+
+        // نضيف مستمع لحدث "input" لكل الحقول
+        inputs.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', calculate);
+            }
+        });
+
+        function calculate() {
+            // نجيب القيم من الحقول
+            const wholesalePrice = parseFloat(document.getElementById('wholesalePrice').value) || 0;
+            const deliveryCost = parseFloat(document.getElementById('deliveryCost').value) || 0;
+            const deliveryRate = parseFloat(document.getElementById('deliveryRate').value) || 0;
+            const sellingPriceInput = parseFloat(document.getElementById('sellingPriceInput').value) || 0;
+            const dailyBudget = parseFloat(document.getElementById('dailyBudget').value) || 0;
+            const maximumCPAInput = parseFloat(document.getElementById('maximumCPAInput').value) || 0;
+
+            // حساب الربح الصافي
+            const grossProfit = sellingPriceInput - wholesalePrice - deliveryCost;
+            document.getElementById('grossProfit').textContent = `${grossProfit.toFixed(2)} IQD`;
+
+            // حساب الربح بعد نسبة الاستلام
+            const adjustedProfit = grossProfit * (deliveryRate / 100);
+            document.getElementById('adjustedProfit').textContent = `${adjustedProfit.toFixed(2)} IQD`;
+
+            // حساب أعلى كلفة للطلب مسموحة
+            let maxCPAFromCalculation = 0;
+            if (fixedExchangeRate > 0) {
+                maxCPAFromCalculation = adjustedProfit / fixedExchangeRate;
+            }
+            document.getElementById('maximumCPA').textContent = `${maxCPAFromCalculation.toFixed(2)} USD`;
+
+            // حساب عدد الطلبات المطلوبة يومياً
+            let requiredOrders = 0;
+            if (maxCPAFromCalculation > 0) {
+                requiredOrders = dailyBudget / maxCPAFromCalculation;
+            }
+            document.getElementById('requiredOrders').textContent = `${requiredOrders.toFixed(2)} طلب`;
+
+            // تحديد حالة الربحية
+            const profitStatusDiv = document.getElementById('profitStatus');
+            const actualCPA = maximumCPAInput;
+
+            if (actualCPA > 0) {
+                profitStatusDiv.classList.remove('hidden');
+                if (actualCPA <= maxCPAFromCalculation) {
+                    profitStatusDiv.textContent = '🥳 الحملة مربحة! كلفة الطلب الفعلية هي ضمن الحد الأقصى المقبول. ✅';
+                    profitStatusDiv.className = 'profit-status profit text-center mt-4';
+                } else {
+                    profitStatusDiv.textContent = '❌ الحملة غير مربحة! كلفة الطلب الفعلية أعلى من الحد الأقصى. 😥';
+                    profitStatusDiv.className = 'profit-status unprofitable text-center mt-4';
+                }
+            } else {
+                profitStatusDiv.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

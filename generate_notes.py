@@ -52,7 +52,7 @@ def parse_notion_block_to_html(block):
                 plain_text = f"<s>{plain_text}</s>"
             if annotations['code']:
                 plain_text = f"<code>{plain_text}</code>"
-
+            
             html_content += plain_text
 
     # Convert block types to HTML tags
@@ -85,14 +85,18 @@ def parse_notion_block_to_html(block):
 
 def generate_notes_html():
     """Generates HTML files for each Notion page and an index page."""
+    # Create notes directory if it doesn't exist
+    if not os.path.exists("notes"):
+        os.makedirs("notes")
+
     pages = get_notion_pages()
     index_links = ""
 
     for page in pages:
         # Extract title and slug
         title = page['properties']['Name']['title'][0]['plain_text']
-        slug = re.sub(r'[^a-zA-Z0-9]+', '-', title.lower())  # "My Note" -> "my-note"
-        filename = f"{slug}.html"
+        slug = re.sub(r'[^a-zA-Z0-9]+', '-', title.lower())
+        filename = f"notes/{slug}.html" # Save in the 'notes' directory
 
         last_edited = page['last_edited_time'].split('T')[0]
 
@@ -102,25 +106,43 @@ def generate_notes_html():
 
         # Build page HTML
         page_html = f"""
-        <html>
-          <head>
-            <meta charset="utf-8">
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>{title}</title>
-            <link rel="stylesheet" href="style.css">
-          </head>
-          <body class="prose lg:prose-xl mx-auto p-8">
-            <h1>{title}</h1>
-            <p class="text-sm text-gray-500">نشرت في: {last_edited}</p>
-            {content_html}
-          </body>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+            <style>
+                body {{ font-family: 'Tajawal', sans-serif; }}
+                .container {{ max-width: 1000px; }}
+            </style>
+        </head>
+        <body class="bg-gray-50 text-gray-800">
+            <div class="container mx-auto p-8">
+                <a href="../personal_newsletter.html" class="text-blue-600 hover:underline mb-4 block">&larr; العودة للمذكرات</a>
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{title}</h1>
+                <p class="text-sm text-gray-500 mb-8">نشرت في: {last_edited}</p>
+                {content_html}
+            </div>
+        </body>
         </html>
         """
 
         with open(filename, "w", encoding="utf-8") as f:
             f.write(page_html)
 
-        # Add link to index
-        index_links += f"<li><a href='{filename}' class='text-blue-600 hover:underline'>{title}</a> ({last_edited})</li>\n"
+        # Add link to index, pointing to the new location
+        index_links += f"""
+        <div class="bg-gray-50 rounded-lg p-6 shadow-md hover:shadow-xl transition-shadow duration-300">
+            <h3 class="text-xl font-bold text-gray-900 mb-2">{title}</h3>
+            <p class="text-sm text-gray-500 mb-4">نشرت في: {last_edited}</p>
+            <a href="notes/{slug}.html" class="text-blue-600 font-semibold hover:underline">اقرأ المزيد &rarr;</a>
+        </div>
+        """
 
     # Update index (personal_newsletter.html)
     with open("personal_newsletter.html", "r", encoding="utf-8") as f:
@@ -128,7 +150,7 @@ def generate_notes_html():
 
     new_html = re.sub(
         r'<!-- Notes Container Section -->[\s\S]*<!-- End Notes Container Section -->',
-        f'<!-- Notes Container Section -->\n<ul>{index_links}</ul>\n<!-- End Notes Container Section -->',
+        f'<!-- Notes Container Section -->\n<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">{index_links}</div>\n<!-- End Notes Container Section -->',
         index_html
     )
 
